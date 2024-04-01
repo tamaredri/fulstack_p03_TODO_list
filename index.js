@@ -6,8 +6,6 @@ const log = console.log;
 
 class DB {
     constructor() {
-        this.getItem = localStorage.getItem;
-        this.setItem = localStorage.setItem;
         log('DB constructor');
     }
 
@@ -15,25 +13,23 @@ class DB {
      *  private functions
      */
 
-    _usersFactory = (username, password, tasks = [])=>{
+    _usersFactory = (password)=>{
         return {
-            username,
             password,
             task_running_number : 0,
-            tasks
+            tasks : []
         };
-    };
+    }
     
-    _taskFactory = (taskid, userid, description, note)=>{
+    _taskFactory = (taskid, description, note)=>{
         return {
             taskid,
-            userid,
             description,
             note,
-            status : '',
-            id_valid: true
+            status : 'in progress',
+            is_valid: true
         };
-    };
+    }
 
     /**
      *  USER DB
@@ -41,12 +37,11 @@ class DB {
 
     GET_users(username) {
         // return the user that has the requested id
-        var user_data = this.getItem(username)
+        var user_data = localStorage.getItem(username)
         if(!user_data) return false;
 
-        user_data = _usersFactory(username, 
-                                JSON.parse(user_data).password, 
-                                JSON.parse(user_data).tasks);
+        user_data = JSON.parse(user_data);
+        user_data.username = username;
         
         log('GET_user', user_data);
         return user_data;
@@ -54,12 +49,13 @@ class DB {
 
     POST_users(username, password){
         // store the user. check if the user does not already exist
-        if(!this.GET_users(username)) return false;
+        if(this.GET_users(username) || username === undefined) return false;
 
-        var user_data = _usersFactory(username, password);
+        var user_data = this._usersFactory(password);
 
         log('POST_user', user_data);
-        this.setItem(JSON.stringify(user_data));
+        
+        localStorage.setItem(username, JSON.stringify(user_data));
         return true;
     }
 
@@ -67,76 +63,85 @@ class DB {
     /**
      *  TASKS DB
      */
-
-    GET_tasks(username){
+    GET_tasks(username, taskid = -1){
         var user_data = this.GET_users(username);
+
         if(!user_data) return false;
 
-        var tasks = user_data.tasks.filter((t) => t.is_valid);
+        var all_tasks = user_data.tasks.filter((t) => t.is_valid);
 
-        log('GET_tasks list', tasks)
-        return tasks; // return false if the user has no tasks?
-    }
+        log('GET_tasks list', all_tasks)
+        if (taskid <= -1) return all_tasks; // return false if the user has no tasks?
 
-    GET_tasks(username, taskid){
-        var user_data = this.GET_users(username);
-        var user_tasks = this.GET_tasks(username);
 
         // the users does not exist or the requested id is invalid - break in 2 return clauses?
-        if(!user_data || 
-            !user_tasks || 
-            taskid >= user_data.task_running_number || 
-            !user_data.tasks[taskid].id_valid) 
+        if(taskid >= user_data.task_running_number || 
+            !user_data.tasks[taskid].is_valid) 
                 return false;
         
-        log('GET_tasks single', user_tasks[taskid]);
-        return user_tasks[taskid];
+        log('GET_tasks single', user_data.tasks[taskid]);
+        return user_data.tasks[taskid];
     }
 
     POST_tasks(username, description, note){
         var user_data = this.GET_users(username);
         if(!user_data) return false;
-        
-        user_data.tasks += [_taskFactory(user_data.task_running_number,
-                                        username,
-                                        description,
-                                        note)];
-            
-        log('POST_tasks', user_data.taks[user_data.task_running_number]);
 
-        user_data.task_running_number++;
-        this.setItem(JSON.stringify(user_data));
+        var running_id = parseInt(user_data.task_running_number);
+        
+        if(description === undefined) description = "";
+        if(note === undefined) note = "";
+        
+        user_data.tasks[running_id] = 
+                        this._taskFactory(user_data.task_running_number, description, note);
+            
+        log('POST_tasks', user_data.tasks[running_id]);
+
+        user_data.task_running_number = running_id + 1;
+        delete user_data.username;
+
+        localStorage.setItem(username, JSON.stringify(user_data));
         return true;
     }
 
-    PUT_tasks(username, taskid, description = "", note = "", status = ""){
+    PUT_tasks(username, taskid, description = undefined, note = undefined, status = undefined){
         var user_data = this.GET_users(username);
+        if(!user_data || 
+            taskid >= user_data.task_running_number || 
+            !user_data.tasks[taskid].is_valid) 
+            return false;
+            
+            
         var task = this.GET_tasks(username, taskid);
-        if(!user_data || !task) return false;
 
-
-        if(description != "") task.description = description;
-        if(note != "") task.note = note;
-        if(status != "") task.status = status;
+        if(description != undefined) task.description = description;
+        if(note != undefined) task.note = note;
+        if(status != undefined) task.status = status;
 
         user_data.tasks[task.taskid] = task;
         
         log('PUT_tasks', user_data.tasks[task.taskid]);
-        this.setItem(JSON.stringify(user_data));
+
+        delete user_data.username;
+        
+        localStorage.setItem(username, JSON.stringify(user_data));
         return true;
     }
 
     DELETE_tasks(username, taskid){
-        var user_data = this.GET_tasks(username);
+        var user_data = this.GET_users(username);
         if(!user_data || 
             taskid >= user_data.task_running_number || 
-            !user_data.tasks[taskid].id_valid) 
+            !user_data.tasks[taskid].is_valid) 
                 return false;
 
-        user_data.tasks[taskid].id_valid == false;
+        user_data.tasks[taskid].is_valid = false;
 
         log('DELETE_tasks', user_data.tasks[taskid]);
-        this.setItem(JSON.stringify(user_data));
+
+        delete user_data.username;
+        
+        localStorage.setItem(username, JSON.stringify(user_data));
         return true;
     }
 }
@@ -170,55 +175,97 @@ class Server{
     }
 
 
-    parseMessage(message, parseDone){
+    parseMessage(message, parseDoneCallBack){
         // go the message fields - type Message
         var request = message.url.split('/');
-        var body = message.body;
+        var body = JSON.parse(message.body);
         var response;
 
         // in each case - check the url structure - users / tasks, with or without id?
         var problem = false;
-        switch (message.method) {
-            case 'GET':
-                if(request[0] === 'users'){
-                    response = this.check_user_credentials(request)
-                } else if(request[0] === 'tasks'){
-                    response = this.get_tasks(request);
-                } else {
-                    // error
-                }
-                break;
+
+        switch (request[0]) {
+            case 'users':
                 
-            case 'POST':
-                if(request[0] === 'users'){
-                    this.enter_new_user(body);
-                } else if(request[0] === 'tasks'){
+                switch (message.method) {
+                    case 'GET':
+                        // check credentials. if there was a false returned or wrong password - find an error with the request body.
+                        if (request.length != 2) return 404; // find the right error code for bad request.
 
-                } else {
+                        var password = this.db_access.GET_users(request[1]);
 
-                }
-                break; 
+                        if(password === body.password) response = {'access': 'granted'};
+                        else response = {'access' : 'denied'};
 
-            case 'PUT':
-                if(request[0] === 'tasks'){
+                        break;
+                        
+                    case 'POST':
+                        // store the user in the DB and return a code according to the result of the DB function. 
+                        if (request.length != 1) return 404; // find the right error code for bad request.
 
-                } else {
+                        if(!this.db_access.POST_users(body.username, body.password)) return 404; // find the right error code for bad request.
 
+                        break; 
+        
+                    default:
+                        // problem with the url - error code?
+                        break;
                 }
                 break;
 
-            case 'DELETE':
-                if(request[0] === 'tasks'){
 
-                } else {
+            case 'tasks':
+                switch (message.method) {
+                    case 'GET':
+                        // check if the get requests the entire list or just 1 task. 
+                        // according to the return value of the DB - decied the code to return
+                        if(2 > request.length > 3) return 404; // find the right error code for bad request.
 
+                        var taskid = -1;
+                        if(request.length === 3) taskid = parseInt(request[2]);
+
+                        var tasks = this.db_access.GET_tasks(request[1], taskid);
+                        if(!tasks) return 404; // find the right error code for bad request.
+
+                        response = {'tasks' : tasks};
+
+                        break;
+                        
+                    case 'POST':
+                        if (request.length != 2) return 404; // find the right error code for bad request.
+                        
+                        if(!this.db_access.POST_tasks(request[1], body.description, body.note)) 
+                            return 404; // find the right error code for bad request.
+
+                        break; 
+
+                    case 'PUT':
+                        if (request.length != 3) return 404; // find the right error code for bad request.
+                        
+                        if(!this.db_access.PUT_tasks(request[1], parseInt(request[2]), body.description, body.note, body.status)) 
+                            return 404; // find the right error code for bad request.
+
+                        break;
+
+                    case 'DELETE':
+                        if (request.length != 3) return 404; // find the right error code for bad request.
+                        
+                        if(!this.db_access.DELETE_tasks(request[1], parseInt(request[2]))) 
+                            return 404; // find the right error code for bad request.
+
+                        break;
+
+                    default:
+                        // invalid request - return an error message
+                        break;
                 }
                 break;
-
+        
             default:
-                // invalid request - return an error message
+                // problem with the url - error code?
                 break;
         }
+        
     }
 
     // add helpers
@@ -341,6 +388,58 @@ var get_network = (() => {
 /**
  *  test for the DB class
  */
-var db_access = new DB();
+var db_access = get_db();
 
+/**
+ * Test DB actions
+ */
+
+var test_POST_GET_users = () => {
+    if (!db_access.GET_users('TamarEdri')) log('test passed');
+
+    if (db_access.POST_users('TamarEdri', '1234')) log('test passed');
+    if (db_access.POST_users('TamarArbel', '5678')) log('test passed');
+
+    if (db_access.GET_users('TamarEdri')) log('test passed');
+    if (db_access.GET_users('TamarArbel')) log('test passed');
+};
+
+var test_POST_tasks = () =>{
+    db_access.POST_tasks('TamarEdri', 'fulstack project 02', 'a website with 2 video games');  
+    db_access.POST_tasks('TamarEdri', 'fulstack project 03', 'due TUE 9 in april..');  
+    db_access.POST_tasks('TamarArbel', 'test in algo', 'finish studying a day in advance.');
+
+    if (!db_access.POST_tasks('Tamar', 'wrong task', 'wrong description')) log('test passed');  
+    
+};
+
+var test_GET_tasks = () =>{
+    log(db_access.GET_tasks('TamarEdri'));  
+    log(db_access.GET_tasks('TamarArbel'));
+
+    log(db_access.GET_tasks('TamarEdri', 1));  
+    log(db_access.GET_tasks('TamarArbel', 0));
+    
+    log(db_access.GET_tasks('TamarEdri', 3));  
+    log(db_access.GET_tasks('TamarArbel', 1));
+};
+
+var test_PUT_tasks = () =>{
+    log(db_access.PUT_tasks('TamarEdri', 1, "", 'due TUE 9 in april.', ""));  
+    log(db_access.PUT_tasks('TamarEdri', 0, "", "", "Done"));  
+
+    log(db_access.PUT_tasks('TamarArbel', 0, "", "", 'Done'));
+};
+
+var test_DELETE_tasks = () =>{
+    log(db_access.DELETE_tasks('TamarEdri', 0));  
+};
+
+var test_DB = () => {
+    test_POST_GET_users();
+    test_POST_tasks();
+    test_GET_tasks();
+    test_PUT_tasks();
+    test_DELETE_tasks();
+};
 
