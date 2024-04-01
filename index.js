@@ -179,10 +179,7 @@ class Server{
         // go the message fields - type Message
         var request = message.url.split('/');
         var body = JSON.parse(message.body);
-        var response;
-
-        // in each case - check the url structure - users / tasks, with or without id?
-        var problem = false;
+        var response = {};
 
         switch (request[0]) {
             case 'users':
@@ -266,43 +263,9 @@ class Server{
                 break;
         }
         
-    }
-
-    // add helpers
-    // randomly add 400 / 300 ERROR codes
-
-    /**
-     *  USERS
-     */
-    check_user_credentials(request){
-        if(request.length < 2){
-            problem = true;
-        } else{
-            var user = this.db_access.GET_users(parseInt(request[1]));
-            // check user.body === message.body
-        }
-    }
-
-    enter_new_user(){
-
-    }
-    
-
-    /**
-     * TASKS
-     */
-
-    get_tasks(request){
-        if(request.length === 2){
-            this.db_access.GET_tasks(request[1]);
-        } else if(request.length === 3){
-            this.db_access.GET_tasks(parseInt(request[1], request[2]));
-        }
-        else{
-            // do something?
-        }
-    }
-    
+        // no problem accured during the request processing
+        parseDoneCallBack(response);
+    }    
 }
 
 
