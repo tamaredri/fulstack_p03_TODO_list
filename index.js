@@ -406,3 +406,126 @@ var test_DB = () => {
     test_DELETE_tasks();
 };
 
+
+/**
+ * Client with SPA
+ */
+
+document.addEventListener("DOMContentLoaded", function() {
+    const container = document.getElementById('container');
+    const loginTemplate = document.getElementById('login-template').content.cloneNode(true);
+    const signupTemplate = document.getElementById('signup-template').content.cloneNode(true);
+    console.log("hey8");
+
+    // Function to load the signup form
+    function loadSignupForm() {
+        container.innerHTML = ''; // Clear container
+        container.appendChild(signupTemplate);
+        console.log("hey3");
+        // Add event listener for "Login" link in the signup form
+        const showLogin = document.getElementById('login-button'); //ok
+        console.log(showLogin);
+        showLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log("hey4");
+            loadLoginForm(); // Load the login form
+            console.log("hey5");
+        });
+    }
+
+    // Function to load the login form
+    function loadLoginForm() {
+        container.innerHTML = ''; // Clear container
+        container.appendChild(loginTemplate);
+        console.log("hey1");
+        
+        // Add event listener for "Register" link in the login form
+        const showSignup = document.getElementById('register-button'); //שגיאה הוא אומר שזה null??
+        console.log(showSignup);
+        showSignup.addEventListener('click', function() {
+            console.log("hey10");
+            loadSignupForm(); // Load the signup form
+        });
+    }
+
+    // Show login form initially
+    container.appendChild(loginTemplate);
+
+    // Add event listener for "Register" link in the login form
+    const showSignup = document.getElementById('register-button'); //ok
+    showSignup.addEventListener('click', function(e) {
+        e.preventDefault();
+        loadSignupForm(); // Load the signup form
+    });
+
+    //ok
+    const loginButton = document.getElementById('loginSubmit'); 
+    loginButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        Login();
+    });
+});
+
+function Login() {
+    console.log("in login");
+    var username = document.getElementById("loginUsername").value;
+    var password = document.getElementById("loginPassword").value;
+    //get the user from the DB? or localStorage?
+
+    if (true) //password === password from DB
+    {
+        LoadPersonalAreaPage()
+    } 
+}
+
+function Singup () {
+
+}
+
+function LoadPersonalAreaPage () {
+    const container = document.getElementById('container');
+    const PersonalAreaTemplate = document.getElementById('personal-area-template').content.cloneNode(true);
+    container.innerHTML = ''; // Clear container
+    container.appendChild(PersonalAreaTemplate);
+    //get all the tasks from the DB
+    var get_request = new FXMLHttpRequest();
+    get_request.open('GET', "users");
+    get_request.onload = function () {
+        //bring the tasks to the area
+        // לולאת הזרקה לטבלה?
+    }
+    get_request.send();
+}
+
+function AddTask() { 
+    var post_request = new FXMLHttpRequest();
+    post_request.open('POST')
+    //ליצור אובייקט הודעה או מחרוזת?
+    //להוסיף כאן ID ?
+    var task_data = "{description:" + document.getElementById("description").value + ",\nnote:" + document.getElementById("note").value + ",\nstate:" + document.getElementById("state").value + "\n}" ;
+    post_request.open('POST', null, task_data);
+    post_request.onload = function () { 
+        LoadPersonalAreaPage();
+    }
+    post_request.send(task_data);
+}
+
+function editTask() {
+    var put_request = new FXMLHttpRequest(); 
+    var put_request = "{description:" + document.getElementById("description").value + "\nnote:" + document.getElementById("note").value + "\nstate:" + document.getElementById("state").value + "\n}" ;
+    put_request.open('PUT', null, task_updated_data);
+    put_request.onload = function () {
+        LoadPersonalAreaPage();
+    }
+    put_request.send(task_updated_data);
+}
+
+function DeleteTask() {
+    var delete_request = new FXMLHttpRequest();
+    delete_request.open('DELETE', /*מספר רץ? מאיפה?*/);
+    delete_request.onload = function () {
+        LoadPersonalAreaPage();
+    }
+    delete_request.send();
+}
+
