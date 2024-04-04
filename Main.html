@@ -25,21 +25,9 @@
         <div class="signup-div">
             <h2>Sign Up</h2>
             <form id="signupForm">
-                <input type="text" id="firstName" placeholder="First Name" required>
-                <input type="text" id="lastName" placeholder="Last Name" required>
                 <input type="text" id="signupUsername" placeholder="Username" required>
-                <p id="signupErrorMessage" class="error-message"></p>
-                <input type="email" id="email" placeholder="Email" required>
                 <input type="password" id="signupPassword" placeholder="Password" required>
                 <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-                <p id="confirmErrorMessage" class="error-message"></p>
-                <input type="date" id="birthday" placeholder="Birthday (YYYY-MM-DD)" required>
-                <select id="gender" required>
-                    <option value="" disabled selected>Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                </select>
                 <button id="signupSubmit" type="submit">Sign Up</button>
             </form>
             <p>Already have an account? <a href="#" id="login-button">Login</a></p>
@@ -50,16 +38,20 @@
     <div class="personal-area-div">
         <h2>Personal Area</h2>
         <table id="tasks-table">
-            <thead>
-                <tr>
-                    <th>Number</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tasks-data"></tbody>
+            <tbody id="tasks-body"></tbody>
         </table>
     </div>
+   </template>
+
+   <template id="table-data">
+        <td>
+            <div>
+                <button id="delete-button">delete</button>
+                <button id="open-button">open</button>
+                <text id="description-area">description</text>
+                <button id="status-button">V</button>
+            </div>
+        </td>
    </template>
 
    <template id="single-task-template">
@@ -67,7 +59,8 @@
         <h2>Task</h2>
         <input type="text" id="description" placeholder="Description">
         <input type="text" id="note" placeholder="Note">
-        <input type="text" id="state" placeholder="State">
+        <button id="status-button">status</button>
+        <button id="update-button">update</button>
     </div>
    </template>
 

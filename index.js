@@ -203,7 +203,6 @@ class Server{
     parseMessage(message, parseDoneCallBack){
         // go the message fields - type Message
         var request = message.url.split('/');
-        var body = JSON.parse(message.body);
 
         var response = new Message();
         response.status = "200 OK";
@@ -298,7 +297,7 @@ class Server{
                             break;
                         } // the url was unrecognized
 
-                        if(!this.db_access.PUT_tasks(request[1], parseInt(request[2]), body.description, body.note, body.status))  {
+                        if(!this.db_access.PUT_tasks(request[1], parseInt(request[2]), message.body.description, message.body.note, message.body.status))  {
                             response.status = "404 Not Found";
                             break;
                         } // the requested action could not be performed
@@ -342,14 +341,15 @@ class Network{
 
     request(message, call_back){
         // randomly send 500 ERROR code - the server is not responding
-        if(Math.floor(Math.random() * 3) === 0){
+        if(Math.floor(Math.random() * 10) === 0){
             var response_messag = new Message();
             response_messag.status = "503 Service Unavailable";
 
             call_back(response_messag);
         } else{
             this.response_call_back = call_back;
-            this.server.parseMessage(message, this.response);
+            console.log(this);
+            this.server.parseMessage(message, this.response.bind(this));
         }
     }
 
@@ -374,14 +374,15 @@ class FXMLHttpRequest{
 
     send(body = {}){ // sends the request
         this.request_message.body = body;
-        this.network.request(this.request_message, receive_response);
+        this.network.request(this.request_message, this.receive_response.bind(this));
         this.readyState = 3; //3: processing request
     }
     
     receive_response(message){ // callback function for the network to return its response.
-        this.readyState = 4; //4: request finished and response is ready
+        log(this);
         this.response_message = message;
         this.status = message.status;
+        this.readyState = 4; //4: request finished and response is ready
         this.onload_func(); // define default function?
     }
 
@@ -485,6 +486,7 @@ var test_DB = () => {
 };
 
 
+
 /**
  * Client with SPA
  */
@@ -493,21 +495,18 @@ document.addEventListener("DOMContentLoaded", function() {
     const container = document.getElementById('container');
     const loginTemplate = document.getElementById('login-template').content.cloneNode(true);
     const signupTemplate = document.getElementById('signup-template').content.cloneNode(true);
-    console.log("hey8");
 
     // Function to load the signup form
     function loadSignupForm() {
         container.innerHTML = ''; // Clear container
         container.appendChild(signupTemplate);
-        console.log("hey3");
+
         // Add event listener for "Login" link in the signup form
         const showLogin = document.getElementById('login-button'); //ok
         console.log(showLogin);
         showLogin.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log("hey4");
             loadLoginForm(); // Load the login form
-            console.log("hey5");
         });
     }
 
@@ -515,13 +514,11 @@ document.addEventListener("DOMContentLoaded", function() {
     function loadLoginForm() {
         container.innerHTML = ''; // Clear container
         container.appendChild(loginTemplate);
-        console.log("hey1");
         
         // Add event listener for "Register" link in the login form
         const showSignup = document.getElementById('register-button'); //שגיאה הוא אומר שזה null??
         console.log(showSignup);
         showSignup.addEventListener('click', function() {
-            console.log("hey10");
             loadSignupForm(); // Load the signup form
         });
     }
@@ -545,16 +542,18 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function Login() {
-    console.log("in login");
     var username = document.getElementById("loginUsername").value;
     var password = document.getElementById("loginPassword").value;
     //get the user from the DB? or localStorage?
 
     if (true) //password === password from DB
     {
+        currentUser = "TamarEdri";//username;
         LoadPersonalAreaPage()
     } 
 }
+
+var currentUser = "TamarEdri";
 
 function Singup () {
 
@@ -567,12 +566,51 @@ function LoadPersonalAreaPage () {
     container.appendChild(PersonalAreaTemplate);
     //get all the tasks from the DB
     var get_request = new FXMLHttpRequest();
-    get_request.open('GET', "users");
+    get_request.open('GET', "tasks/" + currentUser);
     get_request.onload = function () {
-        //bring the tasks to the area
-        // לולאת הזרקה לטבלה?
+        var tbody = document.getElementById("tasks-body");
+        get_request.response_message.body.tasks.forEach(task => {
+            var table_data = document.getElementById("table-data").content.cloneNode(true);
+            
+            table_data.getElementById("description-area").innerText = task.description;
+
+            table_data.getElementById("delete-button").addEventListener('click', () => DeleteTask(task.taskid) );
+            table_data.getElementById("open-button").addEventListener('click', () => OpenTask(task.taskid));
+            var button = table_data.getElementById("status-button");
+            table_data.getElementById("status-button").addEventListener('click', () => UpdateStatus(task.taskid, task.status, button));
+            tbody.appendChild(table_data);            
+        });
     }
     get_request.send();
+}
+
+function OpenTask(taskid) {
+    const container = document.getElementById('container');
+    container.innerHTML = ''; // Clear container
+
+    var get_request = new FXMLHttpRequest();
+    get_request.open('GET', "tasks/" + currentUser + "/" + taskid);
+    get_request.onload = function () {
+        const SingelTaskTemplate = document.getElementById('single-task-template').content.cloneNode(true);
+        var button = SingelTaskTemplate.getElementById("status-button");
+        var task = get_request.response_message.body.tasks;
+        SingelTaskTemplate.getElementById("status-button").addEventListener('click', () => UpdateStatus(task.taskid, task.status, button));
+        SingelTaskTemplate.getElementById("update-button").addEventListener('click', () => UpdateTask(task.taskid) );
+        SingelTaskTemplate.getElementById("description").innerText = task.description;
+        SingelTaskTemplate.getElementById("note").innerText = task.note;
+        container.appendChild(SingelTaskTemplate);
+    }
+    get_request.send();
+}
+
+function UpdateStatus(taskid, status, button) {
+    var request = new FXMLHttpRequest();
+    request.open('PUT', "tasks/" + currentUser + "/" + taskid);
+    request.onload = function() {
+        log(button);
+        button.innerText = 'X';
+    }
+    request.send({status : "done" });    
 }
 
 function AddTask() { 
@@ -588,7 +626,7 @@ function AddTask() {
     post_request.send(task_data);
 }
 
-function editTask() {
+function UpdateTask(taskid) {
     var put_request = new FXMLHttpRequest(); 
     var put_request = "{description:" + document.getElementById("description").value + "\nnote:" + document.getElementById("note").value + "\nstate:" + document.getElementById("state").value + "\n}" ;
     put_request.open('PUT', null, task_updated_data);
@@ -598,7 +636,7 @@ function editTask() {
     put_request.send(task_updated_data);
 }
 
-function DeleteTask() {
+function DeleteTask(taskid) {
     var delete_request = new FXMLHttpRequest();
     delete_request.open('DELETE', /*מספר רץ? מאיפה?*/);
     delete_request.onload = function () {
