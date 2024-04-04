@@ -184,41 +184,38 @@ class Message {
     get body() {
         return this.body_data;
     }
-
-    set content_type(content){
-        this.content_type = content;
-    }
-
-    get content_type(){
-        return this.content_type;
-    }
 }
 
 class Server{
     constructor(){
         this.db_access = get_db();
+        // this.network_access = get_network(); - circular dependancies
     }
 
 
-    parseMessage(message, parseDoneCallBack){
+    parseMessage(httpRequest, parseDoneCallBack){
         // go the message fields - type Message
-        var request = message.url.split('/');
+        httpRequest.readyState = 2; // 2: request received
+        httpRequest.readyState = 3; // 3: processing request
 
+        var request_url = httpRequest.request_message.url.split('/');
+        var body = httpRequest.request_message.body;
         var response = new Message();
         response.status = "200 OK";
+        
 
-        switch (request[0]) {
+        switch (request_url[0]) {
             case 'users':
                 
-                switch (message.method) {
+                switch (httpRequest.request_message.method) {
                     case 'GET':
                         // check credentials. if there was a false returned or wrong password - find an error with the request body.
-                        if (request.length != 2) {
+                        if (request_url.length != 2 || body  === undefined) {
                             response.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
 
-                        var user_data = this.db_access.GET_users(request[1]);
+                        var user_data = this.db_access.GET_users(request_url[1]);
                         
                         if(!user_data){
                             response.status = "404 Not Found"; // the user was not found
@@ -230,12 +227,11 @@ class Server{
                             break;
                         }
 
-                        // ?? response.body = user_data; // the request is done.
                         break;
                         
                     case 'POST':
                         // store the user in the DB and return a code according to the result of the DB function. 
-                        if (request.length != 1){
+                        if (request_url.length != 1 || body  === undefined){
                             response.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
@@ -256,19 +252,19 @@ class Server{
 
 
             case 'tasks':
-                switch (message.method) {
+                switch (httpRequest.request_message.method) {
                     case 'GET':
                         // check if the get requests the entire list or just 1 task. 
                         // according to the return value of the DB - decied the code to return
-                        if(2 > request.length > 3){
-                            response.status = "400 Bad Request";
+                        if(2 > request_url.length > 3){
+                            responsel.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
 
                         var taskid = -1;
-                        if(request.length === 3) taskid = parseInt(request[2]);
+                        if(request_url.length === 3) taskid = parseInt(request_url[2]);
 
-                        var tasks = this.db_access.GET_tasks(request[1], taskid);
+                        var tasks = this.db_access.GET_tasks(request_url[1], taskid);
                         if(!tasks) {
                             response.status = "404 Not Found";
                             break;
@@ -279,12 +275,12 @@ class Server{
                         break;
                         
                     case 'POST':
-                        if (request.length != 2) {
+                        if (request_url.length != 2 || body  === undefined) {
                             response.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
                         
-                        if(!this.db_access.POST_tasks(request[1], body.description, body.note))  {
+                        if(!this.db_access.POST_tasks(request_url[1], body.description, body.note))  {
                             response.status = "404 Not Found";
                             break;
                         } // the requested action could not be performed
@@ -292,12 +288,15 @@ class Server{
                         break; 
 
                     case 'PUT':
-                        if (request.length != 3) {
+                        if (request_url.length != 3) {
                             response.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
 
-                        if(!this.db_access.PUT_tasks(request[1], parseInt(request[2]), message.body.description, message.body.note, message.body.status))  {
+                        if(!this.db_access.PUT_tasks(request_url[1], parseInt(request_url[2]), 
+                                                    httpRequest.request_message.body.description,
+                                                    httpRequest.request_message.body.note, 
+                                                    httpRequest.request_message.body.status)){
                             response.status = "404 Not Found";
                             break;
                         } // the requested action could not be performed
@@ -305,12 +304,12 @@ class Server{
                         break;
 
                     case 'DELETE':
-                        if (request.length != 3) {
+                        if (request_url.length != 3) {
                             response.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
                         
-                        if(!this.db_access.DELETE_tasks(request[1], parseInt(request[2])))  {
+                        if(!this.db_access.DELETE_tasks(request_url[1], parseInt(request_url[2])))  {
                             response.status = "404 Not Found";
                             break;
                         } // the requested action could not be performed
@@ -329,8 +328,9 @@ class Server{
         }
         
         // send the response to the caller
-        parseDoneCallBack(response);
-    }    
+        httpRequest.response_message = response;
+        parseDoneCallBack(httpRequest);
+    }  
 }
 
 
@@ -339,22 +339,22 @@ class Network{
         this.server = get_server();
     }
 
-    request(message, call_back){
+    request(httpMessage){
         // randomly send 500 ERROR code - the server is not responding
+        httpMessage.readyState = 1; // 1: server connection established
         if(Math.floor(Math.random() * 10) === 0){
-            var response_messag = new Message();
-            response_messag.status = "503 Service Unavailable";
+            httpMessage.response_message  = new Message();
+            httpMessage.response_message.status = "503 Service Unavailable";
 
-            call_back(response_messag);
+            this.response(httpMessage);
         } else{
-            this.response_call_back = call_back;
-            console.log(this);
-            this.server.parseMessage(message, this.response.bind(this));
+            this.server.parseMessage(httpMessage, this.response);
         }
     }
 
-    response(message){
-        this.response_call_back(message);
+    response(httpMessage){
+        httpMessage.readyState = 4; // 4: request finished and response is ready
+        httpMessage.onload();
     }
 
 }
@@ -374,20 +374,15 @@ class FXMLHttpRequest{
 
     send(body = {}){ // sends the request
         this.request_message.body = body;
-        this.network.request(this.request_message, this.receive_response.bind(this));
-        this.readyState = 3; //3: processing request
-    }
-    
-    receive_response(message){ // callback function for the network to return its response.
-        log(this);
-        this.response_message = message;
-        this.status = message.status;
-        this.readyState = 4; //4: request finished and response is ready
-        this.onload_func(); // define default function?
+        this.network.request(this);
     }
 
     set onload(callback){ // a callback function the FXMLHttpRequest will call once the response is received
         this.onload_func = callback;
+    }
+
+    get onload(){ // a callback function the FXMLHttpRequest will call once the response is received
+        return this.onload_func;
     }
 }
 
@@ -430,13 +425,14 @@ var get_network = (() => {
 /**
  *  test for the DB class
  */
-var db_access = get_db();
+
 
 /**
  * Test DB actions
  */
 
 var test_POST_GET_users = () => {
+    var db_access = get_db();
     if (!db_access.GET_users('TamarEdri')) log('test passed');
 
     if (db_access.POST_users('TamarEdri', '1234')) log('test passed');
@@ -447,6 +443,7 @@ var test_POST_GET_users = () => {
 };
 
 var test_POST_tasks = () =>{
+    var db_access = get_db();
     db_access.POST_tasks('TamarEdri', 'fulstack project 02', 'a website with 2 video games');  
     db_access.POST_tasks('TamarEdri', 'fulstack project 03', 'due TUE 9 in april..');  
     db_access.POST_tasks('TamarArbel', 'test in algo', 'finish studying a day in advance.');
@@ -456,6 +453,7 @@ var test_POST_tasks = () =>{
 };
 
 var test_GET_tasks = () =>{
+    var db_access = get_db();
     log(db_access.GET_tasks('TamarEdri'));  
     log(db_access.GET_tasks('TamarArbel'));
 
@@ -467,6 +465,7 @@ var test_GET_tasks = () =>{
 };
 
 var test_PUT_tasks = () =>{
+    var db_access = get_db();
     log(db_access.PUT_tasks('TamarEdri', 1, "", 'due TUE 9 in april.', ""));  
     log(db_access.PUT_tasks('TamarEdri', 0, "", "", "Done"));  
 
@@ -474,6 +473,7 @@ var test_PUT_tasks = () =>{
 };
 
 var test_DELETE_tasks = () =>{
+    var db_access = get_db();
     log(db_access.DELETE_tasks('TamarEdri', 0));  
 };
 
