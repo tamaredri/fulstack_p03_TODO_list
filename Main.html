@@ -56,16 +56,25 @@
    </template>
 
    <template id="single-task-template">
-        <div class="single-task-div">
-            <h2>Task</h2>
-            <form id="task-info-to-save">
+    <div class="single-task-div">
+        <h2>Task</h2>
+        <form id="task-info-to-save">
+            <div class="input-wrapper">
+                <label for="description">Description:</label>
                 <input type="text" id="description" placeholder="Description">
+            </div>
+            <div class="input-wrapper">
+                <label for="note">Note:</label>
                 <input type="text" id="note" placeholder="Note">
+            </div>
+            <div class="input-wrapper">
                 <input id="status-button" type="checkbox">
-                <button id="update-button">save</button>
-            </form>
-        </div>
-   </template>
+                <label for="status-button" id="checkbox-label">I am done</label>
+            </div>
+            <button id="update-button">Save</button>
+        </form>
+    </div>
+</template>
 
     <script src="index.js"></script>
 
