@@ -1,0 +1,291 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+
+
+/**
+ * Login Template
+ */
+
+
+/* Apply font family to the entire document */
+html, body {
+    font-family: 'Indie Flower', cursive;
+    height: 100%; 
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    background-color: #aed6f1;
+}
+
+/* Center all elements within login-template */
+.login-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-color: #aed6f1;
+    padding: 20px;
+}
+
+/* Style the login form inputs and buttons */
+#loginForm input[type="text"],
+#loginForm input[type="password"],
+#login-submit {
+    font-family: 'Indie Flower', cursive; 
+}
+
+/* Style the login form inputs and buttons */
+#loginForm input[type="text"],
+#loginForm input[type="password"] {
+    width: 250px;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#loginForm button {
+    width: 150px;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #1a5276;;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* Style error message */
+.error-message {
+    color: red;
+    margin-top: 5px;
+}
+
+/* Style the register link */
+#register-link {
+    color: #1a5276;
+}
+
+#register-link:hover {
+    text-decoration: underline;
+}
+
+
+/* Style the login title */
+.login-div h2 {
+    color: #1a5276; 
+}
+
+/* Style the paragraph */
+.login-div p {
+    color: #1a5276;
+}
+
+
+/**
+ * Signup Template
+ */
+
+
+ .signup-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 20px; 
+}
+
+/* Style the signup title */
+.signup-div h2 {
+    color: #1a5276;
+}
+
+/* Style the signup form inputs and button */
+#signupForm input[type="text"],
+#signupForm input[type="password"],
+#signup-submit {
+    font-family: 'Indie Flower', cursive;
+}
+
+#signupForm input[type="text"],
+#signupForm input[type="password"] {
+    width: 250px;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#signup-submit {
+    width: 150px;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #1a5276; 
+    color: #fff;
+    cursor: pointer;
+}
+
+#signup-submit:hover {
+    background-color: #154360; 
+}
+
+/* Style the paragraph */
+.signup-div p {
+    color: #1a5276; 
+}
+
+/* Style the login link */
+#login-link {
+    color: #1a5276; 
+}
+
+#login-link:hover {
+    text-decoration: underline;
+}
+
+
+
+/**
+ * Personal Area Template
+ */
+
+
+ /* Align the elements at the top of the page */
+.personal-area-div {
+    position: absolute;
+    top: 0;
+    margin-top: 20px;
+    width: 100%;
+    text-align: left;
+}
+
+/* Style the personal area title */
+.personal-area-div h2 {
+    color: #1a5276; 
+}
+
+/* Style the add task button */
+#add-task {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #1a5276; 
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+#add-task:hover {
+    background-color: #154360; 
+}
+
+/* Style the tasks table */
+#tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#tasks-table th, #tasks-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+}
+
+#tasks-table th {
+    background-color: #f2f2f2;
+    color: #333; 
+}
+
+#tasks-table td {
+    display: block;
+}
+
+#tasks-body {
+    top: 0;
+    margin-top: 20px;
+}
+
+/**
+ * single-task-template Template
+ */
+
+ .single-task-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 20px; 
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+/* Style the task title */
+.single-task-div h2 {
+    color: #1a5276; 
+}
+
+.input-wrapper label {
+    font-size: 20px; 
+    text-align: left;
+    display: block; 
+    color: #1a5276; 
+    font-family: 'Indie Flower', cursive;
+    margin-bottom: 5px; 
+}
+
+/* Style the task form inputs and button */
+#task-info-to-save input[type="text"],
+#task-info-to-save input[type="checkbox"],
+#update-button {
+    font-family: 'Indie Flower', cursive;
+}
+
+#task-info-to-save input[type="text"] {
+    width: 250px;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#checkbox-label {
+    display: inline-block;
+}
+
+#status-button {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+#update-button {
+    width: 150px;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #1a5276; 
+    color: #fff; 
+    cursor: pointer;
+}
+
+#update-button:hover {
+    background-color: #154360; 
+}
