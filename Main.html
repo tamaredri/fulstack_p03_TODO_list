@@ -12,12 +12,12 @@
         <div class="login-div">
             <h2>Login</h2>
             <form id="loginForm">
-                <input type="text" id="loginUsername" placeholder="Username" required>
-                <input type="password" id="loginPassword" placeholder="Password" required>
+                <input type="text" id="login-username" placeholder="Username" required>
+                <input type="password" id="login-password" placeholder="Password" required>
                 <p id="loginErrorMessage" class="error-message"></p>
-                <button id="loginSubmit" type="submit">Login</button>
+                <button id="login-submit" type="submit">Login</button>
             </form>
-            <p>Don't have an account? <a href="#" id="register-button">Register</a></p> 
+            <p>Don't have an account? <a href="#" id="register-link">Register</a></p> 
         </div>
     </template>
 
@@ -25,18 +25,19 @@
         <div class="signup-div">
             <h2>Sign Up</h2>
             <form id="signupForm">
-                <input type="text" id="signupUsername" placeholder="Username" required>
-                <input type="password" id="signupPassword" placeholder="Password" required>
+                <input type="text" id="signup-username" placeholder="Username" required>
+                <input type="password" id="signup-password" placeholder="Password" required>
                 <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-                <button id="signupSubmit" type="submit">Sign Up</button>
+                <button id="signup-submit" type="submit">Sign Up</button>
             </form>
-            <p>Already have an account? <a href="#" id="login-button">Login</a></p>
+            <p>Already have an account? <a href="#" id="login-link">Login</a></p>
         </div>
    </template>
 
    <template id="personal-area-template">
     <div class="personal-area-div">
         <h2>Personal Area</h2>
+        <button id="add-task">Add task</button>
         <table id="tasks-table">
             <tbody id="tasks-body"></tbody>
         </table>
@@ -49,19 +50,21 @@
                 <button id="delete-button">delete</button>
                 <button id="open-button">open</button>
                 <text id="description-area">description</text>
-                <button id="status-button">V</button>
+                <input id="status-button" type="checkbox">
             </div>
         </td>
    </template>
 
    <template id="single-task-template">
-    <div class="single-task-div">
-        <h2>Task</h2>
-        <input type="text" id="description" placeholder="Description">
-        <input type="text" id="note" placeholder="Note">
-        <button id="status-button">status</button>
-        <button id="update-button">update</button>
-    </div>
+        <div class="single-task-div">
+            <h2>Task</h2>
+            <form id="task-info-to-save">
+                <input type="text" id="description" placeholder="Description">
+                <input type="text" id="note" placeholder="Note">
+                <input id="status-button" type="checkbox">
+                <button id="update-button">save</button>
+            </form>
+        </div>
    </template>
 
     <script src="index.js"></script>

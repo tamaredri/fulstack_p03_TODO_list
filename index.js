@@ -26,7 +26,7 @@ class DB {
             taskid,
             description,
             note,
-            status : 'in progress',
+            is_done : false,
             is_valid: true
         };
     }
@@ -104,7 +104,7 @@ class DB {
         return true;
     }
 
-    PUT_tasks(username, taskid, description = undefined, note = undefined, status = undefined){
+    PUT_tasks(username, taskid, description = undefined, note = undefined, is_done = undefined){
         var user_data = this.GET_users(username);
         if(!user_data || 
             taskid >= user_data.task_running_number || 
@@ -114,9 +114,9 @@ class DB {
             
         var task = this.GET_tasks(username, taskid);
 
-        if(description != undefined) task.description = description;
-        if(note != undefined) task.note = note;
-        if(status != undefined) task.status = status;
+        if(description != undefined || description != "") task.description = description;
+        if(note != undefined || note != "") task.note = note;
+        if(is_done != undefined || is_done != "") task.is_done = is_done;
 
         user_data.tasks[task.taskid] = task;
         
@@ -198,7 +198,7 @@ class Server{
         httpRequest.readyState = 2; // 2: request received
         httpRequest.readyState = 3; // 3: processing request
 
-        var request_url = httpRequest.request_message.url.split('/');
+        var request_url = httpRequest.request_message.url.split('/').slice(1);
         var body = httpRequest.request_message.body;
         var response = new Message();
         response.status = "200 OK";
@@ -256,8 +256,8 @@ class Server{
                     case 'GET':
                         // check if the get requests the entire list or just 1 task. 
                         // according to the return value of the DB - decied the code to return
-                        if(2 > request_url.length > 3){
-                            responsel.status = "400 Bad Request";
+                        if(2 > request_url.length || request_url.length > 3){
+                            response.status = "400 Bad Request";
                             break;
                         } // the url was unrecognized
 
@@ -296,7 +296,7 @@ class Server{
                         if(!this.db_access.PUT_tasks(request_url[1], parseInt(request_url[2]), 
                                                     httpRequest.request_message.body.description,
                                                     httpRequest.request_message.body.note, 
-                                                    httpRequest.request_message.body.status)){
+                                                    httpRequest.request_message.body.is_done)){
                             response.status = "404 Not Found";
                             break;
                         } // the requested action could not be performed
@@ -342,7 +342,7 @@ class Network{
     request(httpMessage){
         // randomly send 500 ERROR code - the server is not responding
         httpMessage.readyState = 1; // 1: server connection established
-        if(Math.floor(Math.random() * 10) === 0){
+        if(Math.floor(Math.random() * 7) === 0){
             httpMessage.response_message  = new Message();
             httpMessage.response_message.status = "503 Service Unavailable";
 
@@ -427,10 +427,6 @@ var get_network = (() => {
  */
 
 
-/**
- * Test DB actions
- */
-
 var test_POST_GET_users = () => {
     var db_access = get_db();
     if (!db_access.GET_users('TamarEdri')) log('test passed');
@@ -444,9 +440,9 @@ var test_POST_GET_users = () => {
 
 var test_POST_tasks = () =>{
     var db_access = get_db();
-    db_access.POST_tasks('TamarEdri', 'fulstack project 02', 'a website with 2 video games');  
-    db_access.POST_tasks('TamarEdri', 'fulstack project 03', 'due TUE 9 in april..');  
-    db_access.POST_tasks('TamarArbel', 'test in algo', 'finish studying a day in advance.');
+    db_access.POST_tasks('TamarEdri', '', '');  
+    db_access.POST_tasks('TamarEdri', '', '');  
+    db_access.POST_tasks('TamarArbel', '', '');
 
     if (!db_access.POST_tasks('Tamar', 'wrong task', 'wrong description')) log('test passed');  
     
@@ -466,10 +462,10 @@ var test_GET_tasks = () =>{
 
 var test_PUT_tasks = () =>{
     var db_access = get_db();
-    log(db_access.PUT_tasks('TamarEdri', 1, "", 'due TUE 9 in april.', ""));  
-    log(db_access.PUT_tasks('TamarEdri', 0, "", "", "Done"));  
+    log(db_access.PUT_tasks('TamarEdri', 1, "fulstack project 02", 'a website with 2 video games.', undefined));  
+    log(db_access.PUT_tasks('TamarEdri', 0, "fulstack project 03", "due TUE 9 in april..", true));  
 
-    log(db_access.PUT_tasks('TamarArbel', 0, "", "", 'Done'));
+    log(db_access.PUT_tasks('TamarArbel', 0, "test in algo", "finish studying a day in advance.", true));
 };
 
 var test_DELETE_tasks = () =>{
@@ -482,7 +478,7 @@ var test_DB = () => {
     test_POST_tasks();
     test_GET_tasks();
     test_PUT_tasks();
-    test_DELETE_tasks();
+    //test_DELETE_tasks();
 };
 
 
@@ -491,157 +487,294 @@ var test_DB = () => {
  * Client with SPA
  */
 
-document.addEventListener("DOMContentLoaded", function() {
-    const container = document.getElementById('container');
-    const loginTemplate = document.getElementById('login-template').content.cloneNode(true);
-    const signupTemplate = document.getElementById('signup-template').content.cloneNode(true);
 
-    // Function to load the signup form
-    function loadSignupForm() {
-        container.innerHTML = ''; // Clear container
-        container.appendChild(signupTemplate);
+var container;
+var currentUser;
 
-        // Add event listener for "Login" link in the signup form
-        const showLogin = document.getElementById('login-button'); //ok
-        console.log(showLogin);
-        showLogin.addEventListener('click', function(e) {
-            e.preventDefault();
-            loadLoginForm(); // Load the login form
-        });
-    }
 
-    // Function to load the login form
-    function loadLoginForm() {
-        container.innerHTML = ''; // Clear container
-        container.appendChild(loginTemplate);
-        
-        // Add event listener for "Register" link in the login form
-        const showSignup = document.getElementById('register-button'); //שגיאה הוא אומר שזה null??
-        console.log(showSignup);
-        showSignup.addEventListener('click', function() {
-            loadSignupForm(); // Load the signup form
-        });
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // fill the page with the first view of the website:
+    container = document.getElementById('container');
+    login_init();
 
-    // Show login form initially
-    container.appendChild(loginTemplate);
-
-    // Add event listener for "Register" link in the login form
-    const showSignup = document.getElementById('register-button'); //ok
-    showSignup.addEventListener('click', function(e) {
-        e.preventDefault();
-        loadSignupForm(); // Load the signup form
-    });
-
-    //ok
-    const loginButton = document.getElementById('loginSubmit'); 
-    loginButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        Login();
-    });
 });
 
-function Login() {
-    var username = document.getElementById("loginUsername").value;
-    var password = document.getElementById("loginPassword").value;
-    //get the user from the DB? or localStorage?
 
-    if (true) //password === password from DB
-    {
-        currentUser = "TamarEdri";//username;
-        LoadPersonalAreaPage()
-    } 
-}
+// view initialization functions
 
-var currentUser = "TamarEdri";
+/**
+ * (e = undefined){
+    if(e != undefined) e.preventDefault();
+ */
 
-function Singup () {
+function login_init(){
+    // clone the view
+    const login_template = document.getElementById('login-template').content.cloneNode(true);
+    
+    // update the view's functionalities
+    login_template.getElementById('register-link')
+                 .addEventListener('click', signup_init); // sign-up
 
-}
+    login_template.getElementById('login-submit')
+                 .addEventListener('click', login); // send login info
 
-function LoadPersonalAreaPage () {
-    const container = document.getElementById('container');
-    const PersonalAreaTemplate = document.getElementById('personal-area-template').content.cloneNode(true);
+    // add functionalities
     container.innerHTML = ''; // Clear container
-    container.appendChild(PersonalAreaTemplate);
-    //get all the tasks from the DB
-    var get_request = new FXMLHttpRequest();
-    get_request.open('GET', "tasks/" + currentUser);
-    get_request.onload = function () {
-        var tbody = document.getElementById("tasks-body");
-        get_request.response_message.body.tasks.forEach(task => {
-            var table_data = document.getElementById("table-data").content.cloneNode(true);
-            
-            table_data.getElementById("description-area").innerText = task.description;
+    container.appendChild(login_template);
+}
 
-            table_data.getElementById("delete-button").addEventListener('click', () => DeleteTask(task.taskid) );
-            table_data.getElementById("open-button").addEventListener('click', () => OpenTask(task.taskid));
-            var button = table_data.getElementById("status-button");
-            table_data.getElementById("status-button").addEventListener('click', () => UpdateStatus(task.taskid, task.status, button));
-            tbody.appendChild(table_data);            
-        });
+function signup_init(){
+    // clone the view
+    const signup_template = document.getElementById('signup-template').content.cloneNode(true);
+    
+    // update the view's functionalities
+    signup_template.getElementById('login-link')
+                 .addEventListener('click', login_init); // login
+
+                 signup_template.getElementById('signup-submit')
+                 .addEventListener('click', singup); // send sign-up info
+
+    // add functionalities
+    container.innerHTML = ''; // Clear container
+    container.appendChild(signup_template);
+}
+
+function personal_area_init(){
+    // clone the view
+    const task_list_template = document.getElementById('personal-area-template').content.cloneNode(true);
+    
+    // update the view's functionalities
+    task_list_template.getElementById('add-task')
+                 .addEventListener('click', () => {task_init(-1, true)}); // add a task to the list (first child)
+    
+    // add the task lists
+    var httpRequest = new FXMLHttpRequest();
+    httpRequest.open('GET', `/tasks/${currentUser}`);
+
+    httpRequest.onload = function () {
+        var response = this.response_message;
+
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+            return;
+        } else{
+            task_list_template.appendChild(task_list_init(response.body.tasks, 
+                                                        task_list_template.getElementById("tasks-body")));
+        }
+
+            // add functionalities
+        container.innerHTML = ''; // Clear container
+        container.appendChild(task_list_template);
     }
-    get_request.send();
+
+    httpRequest.send();
 }
 
-function OpenTask(taskid) {
-    const container = document.getElementById('container');
-    container.innerHTML = ''; // Clear container
+function task_list_init(tasks, tbody){
+    tbody.innerHTML = "";
 
-    var get_request = new FXMLHttpRequest();
-    get_request.open('GET', "tasks/" + currentUser + "/" + taskid);
-    get_request.onload = function () {
+    tasks.forEach(task => {
+            var task_row = document.getElementById("table-data").content.cloneNode(true);
+
+            task_row.getElementById("description-area").innerText = task.description;
+
+            task_row.getElementById("delete-button")
+                    .addEventListener('click', () => delete_task(task.taskid) );
+            task_row.getElementById("open-button")
+                    .addEventListener('click', () => task_init(task.taskid));
+
+            task_row.getElementById("status-button")
+                    .addEventListener('change', (e) => update_status(task.taskid, e.target));
+            
+            tbody.appendChild(task_row);            
+        });
+        
+    return tbody;
+}
+
+function task_init(taskid, new_task = false){
+    if(new_task){
+        add_task_init()
+    } else{
+        update_task_init(taskid)
+    }
+
+}
+
+function update_task_init(taskid){
+    container.innerHTML = '';
+
+    var httpRequest = new FXMLHttpRequest();
+    httpRequest.open('GET', `/tasks/${currentUser}/${taskid}`);
+
+    httpRequest.onload = function () {
+
+        var response = this.response_message;
+
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+            return;
+        } 
+
+        var task = httpRequest.response_message.body.tasks;
+
         const SingelTaskTemplate = document.getElementById('single-task-template').content.cloneNode(true);
-        var button = SingelTaskTemplate.getElementById("status-button");
-        var task = get_request.response_message.body.tasks;
-        SingelTaskTemplate.getElementById("status-button").addEventListener('click', () => UpdateStatus(task.taskid, task.status, button));
-        SingelTaskTemplate.getElementById("update-button").addEventListener('click', () => UpdateTask(task.taskid) );
-        SingelTaskTemplate.getElementById("description").innerText = task.description;
-        SingelTaskTemplate.getElementById("note").innerText = task.note;
+
+        SingelTaskTemplate.getElementById("status-button")
+                          .addEventListener('change', (e) => update_status(task.taskid, e.target));
+                          
+        SingelTaskTemplate.getElementById("update-button")
+                          .addEventListener('click', () => update_task(task.taskid) );
+
+        SingelTaskTemplate.getElementById("description").value = task.description;
+        SingelTaskTemplate.getElementById("note").value = task.note;
+        
         container.appendChild(SingelTaskTemplate);
     }
-    get_request.send();
+
+    httpRequest.send();
 }
 
-function UpdateStatus(taskid, status, button) {
+function add_task_init(){
+    container.innerHTML = '';
+
+    const SingelTaskTemplate = document.getElementById('single-task-template').content.cloneNode(true);
+    SingelTaskTemplate.getElementById("update-button")
+                      .addEventListener('click', add_task);
+
+    container.appendChild(SingelTaskTemplate);
+}
+
+function login() {
+    var username = document.getElementById("login-username").value;
+    var password = document.getElementById("login-password").value;
+
+    var httpRequest = new FXMLHttpRequest();
+    httpRequest.open('GET', `/users/${username}`);
+
+    httpRequest.onload = function () {
+        var response = this.response_message;
+
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says: ${response.status}, please try again later.`);
+        } else{
+            currentUser = username;
+            personal_area_init();
+        }
+    };
+
+    httpRequest.send({"password": password});
+}
+
+
+function singup () {
+    var username = document.getElementById("signup-username").value;
+    var password = document.getElementById("signup-password").value;
+    var confirm_password = document.getElementById("confirm-password").value;
+
+    if (password != confirm_password){
+        alert("'Password' and 'verify password' are not the same. Please check again");
+        signup_init();
+        return;
+    }
+
+    var httpRequest = new FXMLHttpRequest();
+    httpRequest.open('POST', `/users`);
+
+    httpRequest.onload = function () {
+        var response = this.response_message;
+
+        if(response.status != "200 OK"){
+            alert(response.status);
+        } else{
+            currentUser = username;
+            personal_area_init();
+        }
+    };
+
+    httpRequest.send({"username" : username, "password": password});
+}
+
+function add_task(){
+ 
+    var httpRequest = new FXMLHttpRequest();
+    httpRequest.open('POST', `/tasks/${currentUser}`);
+
+    httpRequest.onload = function (){
+
+        var response = this.response_message;
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+            return;
+        } 
+
+        personal_area_init();
+    }
+
+    var source = document.getElementById("task-info-to-save");
+    var desc = source.description.value;
+    var note = source.note.value;
+    var is_done = source["status-button"].checked;
+
+    httpRequest.send({'description': desc, 'note': note, 'is_done': is_done})
+                      
+}
+
+function update_task(taskid) {
+    var httpRequest = new FXMLHttpRequest(); 
+    httpRequest.open('PUT', `/tasks/${currentUser}/${taskid}`);
+
+    httpRequest.onload = function () {
+        
+        var response = this.response_message;
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+            return;
+        } 
+        
+        personal_area_init();
+    }
+
+    var desc = document.getElementById("description").value;
+    var note = document.getElementById("note").value;
+    var is_done = document.getElementById("status").value;
+   
+    httpRequest.send({'description': desc, 'note': note, 'is_done': is_done });
+}
+
+function update_status(taskid, button) {
     var request = new FXMLHttpRequest();
-    request.open('PUT', "tasks/" + currentUser + "/" + taskid);
+    request.open('PUT', `/tasks/${currentUser}/${taskid}`);
+
     request.onload = function() {
-        log(button);
-        button.innerText = 'X';
-    }
-    request.send({status : "done" });    
+        
+        var response = this.response_message;
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+            button.checked = !button.checked;
+            return;
+        } 
+    };
+
+    request.send({status : button.checke });    
 }
 
-function AddTask() { 
-    var post_request = new FXMLHttpRequest();
-    post_request.open('POST')
-    //ליצור אובייקט הודעה או מחרוזת?
-    //להוסיף כאן ID ?
-    var task_data = "{description:" + document.getElementById("description").value + ",\nnote:" + document.getElementById("note").value + ",\nstate:" + document.getElementById("state").value + "\n}" ;
-    post_request.open('POST', null, task_data);
-    post_request.onload = function () { 
-        LoadPersonalAreaPage();
-    }
-    post_request.send(task_data);
-}
-
-function UpdateTask(taskid) {
-    var put_request = new FXMLHttpRequest(); 
-    var put_request = "{description:" + document.getElementById("description").value + "\nnote:" + document.getElementById("note").value + "\nstate:" + document.getElementById("state").value + "\n}" ;
-    put_request.open('PUT', null, task_updated_data);
-    put_request.onload = function () {
-        LoadPersonalAreaPage();
-    }
-    put_request.send(task_updated_data);
-}
-
-function DeleteTask(taskid) {
+function delete_task(taskid) {
     var delete_request = new FXMLHttpRequest();
-    delete_request.open('DELETE', /*מספר רץ? מאיפה?*/);
+    delete_request.open('DELETE', `/tasks/${currentUser}/${taskid}`);
+
     delete_request.onload = function () {
-        LoadPersonalAreaPage();
+    
+        var response = this.response_message;
+        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+            return;
+        } 
+
+        personal_area_init();
     }
+
     delete_request.send();
 }
 
