@@ -8,75 +8,84 @@
 <body>
     <div id="container"></div>
 
-    <template id="login-template">
-        <div class="login-div">
+    <template class="template" id="login-template">
+        <div class="container">
             <h2>Login</h2>
             <form id="loginForm">
                 <input type="text" id="login-username" placeholder="Username" required>
                 <input type="password" id="login-password" placeholder="Password" required>
                 <p id="loginErrorMessage" class="error-message"></p>
-                <button id="login-submit" type="submit">Login</button>
+                <button class="submit" id="login-submit" type="submit">Login</button>
             </form>
-            <p>Don't have an account? <a href="#" id="register-link">Register</a></p> 
+            <p>Don't have an account? <a href="#" id="register-link" class="link">Register</a></p> 
         </div>
     </template>
 
-    <template id="signup-template">
-        <div class="signup-div">
+    <template class="template" id="signup-template">
+        <div class="container">
             <h2>Sign Up</h2>
             <form id="signupForm">
                 <input type="text" id="signup-username" placeholder="Username" required>
                 <input type="password" id="signup-password" placeholder="Password" required>
                 <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-                <button id="signup-submit" type="submit">Sign Up</button>
+                <button class="submit" id="signup-submit" type="submit">Sign Up</button>
             </form>
-            <p>Already have an account? <a href="#" id="login-link">Login</a></p>
+            <p>Already have an account? <a href="#" id="login-link" class="link">Login</a></p>
         </div>
    </template>
 
-   <template id="personal-area-template">
-    <div class="personal-area-div">
+   <template class="template" id="personal-area-template">
+    <div class="container">
         <h2>Personal Area</h2>
-        <button id="add-task">Add task</button>
+        <button class="submit" id="add-task">Add task</button>
         <table id="tasks-table">
             <tbody id="tasks-body"></tbody>
         </table>
     </div>
    </template>
 
-   <template id="table-data">
-        <td>
-            <div>
-                <button id="delete-button">delete</button>
+   <template class="template" id="table-data">
+        <tr>
+            <div class="td">
                 <button id="open-button">open</button>
-                <text id="description-area">description</text>
+                <button id="delete-button">delete</button>
                 <input id="status-button" type="checkbox">
+                <text id="description-area">description</text>
             </div>
-        </td>
+        </tr>
    </template>
 
-   <template id="single-task-template">
-    <div class="single-task-div">
+   <template class="template" id="single-task-template">
+    <div class="container">
         <h2>Task</h2>
         <form id="task-info-to-save">
+        
             <div class="input-wrapper">
                 <label for="description">Description:</label>
                 <input type="text" id="description" placeholder="Description">
             </div>
+
             <div class="input-wrapper">
                 <label for="note">Note:</label>
                 <input type="text" id="note" placeholder="Note">
-            </div>
-            <div class="input-wrapper">
+            </div>  
+                
+
+            <div>
                 <input id="status-button" type="checkbox">
                 <label for="status-button" id="checkbox-label">I am done</label>
             </div>
-            <button id="update-button">Save</button>
+            <button class="submit" id="update-button">Save</button>
         </form>
     </div>
 </template>
 
-    <script src="index.js"></script>
+    <script src="JS/DB.js"></script>
+    <script src="JS/Server.js"></script>
+    <script src="JS/Network.js"></script>
+    <script src="JS/FXMLHttpRequest.js"></script>
+    <script src="JS/Defs.js"></script>
+    <script src="JS/index.js"></script>
 
 </body>
 </html>
