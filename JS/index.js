@@ -6,6 +6,7 @@ const log = console.log;
 
 var container;
 var currentUser;
+var template = "";
 
 document.addEventListener("DOMContentLoaded", (e) => {
     
@@ -14,7 +15,6 @@ document.addEventListener("DOMContentLoaded", (e) => {
     login_init(e);
 
 });
-
 
 // view initialization functions
 
@@ -80,7 +80,7 @@ function personal_area_init(){
 
                 task_row.getElementById("status-button")
                         .addEventListener('change', (e) => update_status(e, task.taskid));
-
+                task_row.getElementById("status-button").checked = task.is_done;
                 tbody.appendChild(task_row);            
             });
 
@@ -175,7 +175,7 @@ function add_task_init(){
     container.appendChild(SingelTaskTemplate);
     template = SingelTaskTemplate;
 
-    history.replacehState({user : currentUser}, 'NewTask', `#newtask/${currentUser}`);
+    history.replaceState({user : currentUser}, 'NewTask', `#newtask/${currentUser}`);
 }
 
 
