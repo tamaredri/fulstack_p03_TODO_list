@@ -8,7 +8,7 @@
             "type": "msedge",
             "request": "launch",
             "name": "Launch Edge against localhost",
-            "url": "C:\\Users\\תמר\\Documents\\תמר\\תואר\\שנה ד בעזה\\שנתי\\פולסטאק\\FS3\\fulstack_p03_TODO_list\\Main.html",
+            "url": "C:\\Users\\תמר\\Documents\\תמר\\תואר\\שנה ד בעזה\\שנתי\\פולסטאק\\FS3\\fulstack_p03_TODO_list\\index.html",
             "webRoot": "${workspaceFolder}"
         }
     ]

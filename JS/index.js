@@ -95,7 +95,10 @@ function personal_area_init(){
             task_list_template.getElementById('add-task')
                      .addEventListener('click', () => {window.location.hash = `#newtask/${currentUser}`});
             
-            task_list_init(response.body.tasks, task_list_template.getElementById("tasks-body"));
+            task_list_template.getElementById("tasks-body").innerHTML = "Loading...";
+                     
+            //asynchronous action         
+            setTimeout(() => task_list_init(response.body.tasks), 3000);
 
             container.innerHTML = ''; // Clear container
             container.appendChild(task_list_template);
@@ -211,8 +214,9 @@ function singup(e) {
     httpRequest.send({"username" : username, "password": password});
 }
 
-function task_list_init(tasks, tbody){
+function task_list_init(tasks){
     // help function to generate the rows in the table
+    var tbody = document.getElementById("tasks-body")
     tbody.innerHTML = "";
 
     tasks.forEach(task => {
