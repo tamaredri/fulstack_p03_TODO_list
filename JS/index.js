@@ -80,32 +80,30 @@ function personal_area_init(){
     var httpRequest = new FXMLHttpRequest();
     httpRequest.open('GET', `/tasks/${currentUser}`);
 
+    // clone the view
+    const task_list_template = document.getElementById('personal-area-template').content.cloneNode(true);
+            
+    // update the view's functionalities
+    task_list_template.getElementById('add-task')
+             .addEventListener('click', () => {window.location.hash = `#newtask/${currentUser}`});
+    
+    task_list_template.getElementById("tasks-body").innerHTML = "Loading...";
+    
+    container.innerHTML = ''; // Clear container
+    container.appendChild(task_list_template);
+
     httpRequest.onload = function () {
         var response = this.response_message;
 
         if(response.status != "200 OK"){
-            alert(`Server says ${response.status}. Please try again later.\npersonal_area_init() - ${currentUser}\nwant to reload?`)
-            personal_area_init();
-        } 
-        else{
-            // clone the view
-            const task_list_template = document.getElementById('personal-area-template').content.cloneNode(true);
-            
-            // update the view's functionalities
-            task_list_template.getElementById('add-task')
-                     .addEventListener('click', () => {window.location.hash = `#newtask/${currentUser}`});
-            
-            task_list_template.getElementById("tasks-body").innerHTML = "Loading...";
-                     
-            //asynchronous action         
-            setTimeout(() => task_list_init(response.body.tasks), 3000);
-
-            container.innerHTML = ''; // Clear container
-            container.appendChild(task_list_template);
+            alert(`Server says ${response.status}. Please try again later.\npersonal_area_init() - ${currentUser}`);
+        }        
+        else{   
+            task_list_init(response.body.tasks);
         }
     }
-
-    httpRequest.send();
+    //asynchronous action 
+    setTimeout(() => httpRequest.send(), 3000);
 }
 
 function update_task_init(taskid){
