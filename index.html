@@ -1,117 +1,95 @@
-<!DOCTYPE html/>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TODO list</title>
-        
-        <!-- ICON -->
-        <!-- <link rel="icon" href="../Media/games-logo.png">       -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <!-- Style Sheet -->
-        <!-- <link rel="stylesheet" href="../CSS/Style.css"> -->
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>TODO List</title>
-            <link rel="stylesheet" href="Main.css"/>
-        <body>
-            <div id="page-container"></div>
-        
-            <template class="template" id="login-template">
-                <div class="container">
-                    <h2>Login</h2>
-                    <form id="loginForm">
-                        <input type="text" id="login-username" placeholder="Username" required>
-                        <input type="password" id="login-password" placeholder="Password" required>
-                        <p id="loginErrorMessage" class="error-message"></p>
-                        <button class="submit" id="login-submit" type="submit">Login</button>
-                    </form>
-                    <p>Don't have an account? <a id="register-link" class="link">Register</a></p> 
-                </div>
-            </template>
-        
-            <template class="template" id="signup-template">
-                <div class="container">
-                    <h2>Sign Up</h2>
-                    <form id="signupForm">
-                        <input type="text" id="signup-username" placeholder="Username" required>
-                        <input type="password" id="signup-password" placeholder="Password" required>
-                        <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-                        <button class="submit" id="signup-submit" type="submit">Sign Up</button>
-                    </form>
-                    <p>Already have an account? <a id="login-link" class="link">Login</a></p>
-                </div>
-           </template>
-        
-           <template class="template" id="personal-area-template">
-            <div class="container">
-                <h2>Personal Area</h2>
-                <button class="submit" id="add-task">Add task</button>
-                <table id="tasks-table">
-                    <tbody id="tasks-body"></tbody>
-                </table>
+    <title>TODO List</title>
+     <!-- ICON -->
+     <link rel="icon" href="Media/to-do-list.png"> 
+
+    <link rel="stylesheet" href="Main.css"/>
+<body>
+    <div id="page-container"></div>
+
+    <template class="template" id="login-template">
+        <div class="container">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <input type="text" id="login-username" placeholder="Username" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <p id="loginErrorMessage" class="error-message"></p>
+                <button class="submit" id="login-submit" type="submit">Login</button>
+            </form>
+            <p>Don't have an account? <a id="register-link" class="link">Register</a></p> 
+        </div>
+    </template>
+
+    <template class="template" id="signup-template">
+        <div class="container">
+            <h2>Sign Up</h2>
+            <form id="signupForm">
+                <input type="text" id="signup-username" placeholder="Username" required>
+                <input type="password" id="signup-password" placeholder="Password" required>
+                <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+                <button class="submit" id="signup-submit" type="submit">Sign Up</button>
+            </form>
+            <p>Already have an account? <a id="login-link" class="link">Login</a></p>
+        </div>
+    </template>
+
+    <template class="template" id="personal-area-template">
+    <div class="container">
+        <h2>Personal Area</h2>
+        <button class="submit" id="add-task">Add task</button>
+        <table id="tasks-table">
+            <tbody id="tasks-body"></tbody>
+        </table>
+    </div>
+    </template>
+
+    <template class="template" id="table-data">
+        <tr>
+            <div class="td">
+                <button id="open-button">open</button>
+                <button id="delete-button">delete</button>
+                <input id="status-button" type="checkbox">
+                <text id="description-area">description</text>
             </div>
-           </template>
+        </tr>
+    </template>
+
+    <template class="template" id="single-task-template">
+    <div class="container">
+        <h2>Task</h2>
+        <form id="task-info-to-save">
         
-           <template class="template" id="table-data">
-                <tr>
-                    <div class="td">
-                        <button id="open-button">open</button>
-                        <button id="delete-button">delete</button>
-                        <input id="status-button" type="checkbox">
-                        <text id="description-area">description</text>
-                    </div>
-                </tr>
-           </template>
-        
-           <template class="template" id="single-task-template">
-            <div class="container">
-                <h2>Task</h2>
-                <form id="task-info-to-save">
+            <div class="input-wrapper">
+                <label for="description">Description:</label>
+                <input type="text" id="description" placeholder="Description">
+            </div>
+
+            <div class="input-wrapper">
+                <label>Note:</label>
+                <textarea cols="42" id="note" placeholder="Note"></textarea>
+            </div>  
                 
-                    <div class="input-wrapper">
-                        <label for="description">Description:</label>
-                        <input type="text" id="description" placeholder="Description">
-                    </div>
-        
-                    <div class="input-wrapper">
-                        <label>Note:</label>
-                        <textarea cols="42" id="note" placeholder="Note"></textarea>
-                    </div>  
-                        
-        
-                    <div>
-                        <input id="status-button" type="checkbox">
-                        <label for="status-button" id="checkbox-label">I am done</label>
-                    </div>
-                    <button class="submit" id="update-button">Save</button>
-                </form>
+
+            <div>
+                <input id="status-button" type="checkbox">
+                <label for="status-button" id="checkbox-label">I am done</label>
             </div>
-        </template>
-        
-            <script src="JS/DB.js"></script>
-            <script src="JS/Server.js"></script>
-            <script src="JS/Network.js"></script>
-            <script src="JS/FXMLHttpRequest.js"></script>
-            <script src="JS/Defs.js"></script>
-            <script src="JS/index.js"></script>
-        
-        </body>
-        </html>
-        
-        <!-- Scripts -->
+            <button class="submit" id="update-button">Save</button>
+        </form>
+    </div>
+</template>
 
-        <!-- <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-        <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script> -->
-        <script src="index.js"></script>
+    <script src="JS/DB.js"></script>
+    <script src="JS/Server.js"></script>
+    <script src="JS/Network.js"></script>
+    <script src="JS/FXMLHttpRequest.js"></script>
+    <script src="JS/Defs.js"></script>
+    <script src="JS/index.js"></script>
 
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-      
-    </head>
-    <body>
-    </body>
+</body>
 </html>
