@@ -3,26 +3,43 @@
 */
 
 const log = console.log;
-
 var container;
 var currentUser;
-var template = "";
 
+window.addEventListener("hashchange", set_page_from_hash);
 document.addEventListener("DOMContentLoaded", (e) => {
-    
-    // fill the page with the first view of the website:
-    container = document.getElementById('container');
-    login_init(e);
-
+    container = document.getElementById('page-container');
+    currentUser = localStorage.getItem('currentUser');
+    set_page_from_hash()
 });
 
+function set_page_from_hash() {
+    var hash = window.location.hash.replace('#', '');
+    var user = localStorage.getItem('currentUser');
+
+    if (hash === 'login') {
+        localStorage.setItem('currentUser', '');
+        login_init();
+    }
+    else if (hash === 'signup') {
+        signup_init();
+    }
+    else if (hash === `homepage/${user}`) {
+        personal_area_init();
+    }
+    else if (hash === `newtask/${user}`) {
+        add_task_init();
+    }
+    else if (hash.split('/')[0] === `update`) {
+        update_task_init(hash.split('/')[2]);
+    }
+    else { //default
+        window.location.hash = '#login';
+    }
+}
+
+
 // view initialization functions
-
-/**
- * (e = undefined){
-    if(e != undefined) e.preventDefault();
- */
-
 function login_init(e){
     if(e != undefined) e.preventDefault();
 
@@ -31,15 +48,13 @@ function login_init(e){
     
     // update the view's functionalities
     login_template.getElementById('register-link')
-                 .addEventListener('click', signup_init); // sign-up
+                 .addEventListener('click', () => {window.location.hash = '#signup'}); // sign-up
 
     login_template.getElementById('login-submit')
                  .addEventListener('click', login); // send login info
 
     container.innerHTML = ''; // Clear container
     container.appendChild(login_template);
-    template = login_template;
-    history.pushState({}, 'Login', '#login');
 }
 
 function signup_init(e){
@@ -50,43 +65,17 @@ function signup_init(e){
     
     // update the view's functionalities
     signup_template.getElementById('login-link')
-                 .addEventListener('click', login_init); // login
+                 .addEventListener('click',  () => {window.location.hash = '#login'}); // login
 
     signup_template.getElementById('signup-submit')
                  .addEventListener('click', singup); // send sign-up info
 
     container.innerHTML = ''; // Clear container
     container.appendChild(signup_template);
-    template = signup_template;
-    history.pushState({}, 'Sugnup', '#signup');
 
 }
 
-
 function personal_area_init(){
-    // help function to generate a body
-    function task_list_init(tasks, tbody){
-        tbody.innerHTML = "";
-
-        tasks.forEach(task => {
-                var task_row = document.getElementById("table-data").content.cloneNode(true);
-
-                task_row.getElementById("description-area").innerText = task.description;
-
-                task_row.getElementById("delete-button")
-                        .addEventListener('click', () => delete_task(task.taskid) );
-                task_row.getElementById("open-button")
-                        .addEventListener('click', (e) => task_init(e, task.taskid));
-
-                task_row.getElementById("status-button")
-                        .addEventListener('change', (e) => update_status(e, task.taskid));
-                task_row.getElementById("status-button").checked = task.is_done;
-                tbody.appendChild(task_row);            
-            });
-
-        //return tbody;
-    }
-
     // add the task lists
     var httpRequest = new FXMLHttpRequest();
     httpRequest.open('GET', `/tasks/${currentUser}`);
@@ -94,8 +83,8 @@ function personal_area_init(){
     httpRequest.onload = function () {
         var response = this.response_message;
 
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
-            alert(`Server says ${response.status}. Please try again later.\npersonal_area_init() - ${currentUser}\nwant to reload?`) // TODO: reload to send the request again.
+        if(response.status != "200 OK"){
+            alert(`Server says ${response.status}. Please try again later.\npersonal_area_init() - ${currentUser}\nwant to reload?`)
             personal_area_init();
         } 
         else{
@@ -104,30 +93,16 @@ function personal_area_init(){
             
             // update the view's functionalities
             task_list_template.getElementById('add-task')
-                     .addEventListener('click', (e) => {task_init(e, -1)}); // add a task to the list (first child)
+                     .addEventListener('click', () => {window.location.hash = `#newtask/${currentUser}`});
             
             task_list_init(response.body.tasks, task_list_template.getElementById("tasks-body"));
 
             container.innerHTML = ''; // Clear container
             container.appendChild(task_list_template);
-
-            template = task_list_template;
-            history.pushState({user : currentUser}, 'Home', `#homepage/${currentUser}`);
         }
     }
 
     httpRequest.send();
-}
-
-function task_init(e, taskid){
-    if(e != undefined) e.preventDefault();
-
-    if(taskid === -1){
-        add_task_init()
-    } else{
-        update_task_init(taskid)
-    }
-
 }
 
 function update_task_init(taskid){
@@ -138,8 +113,8 @@ function update_task_init(taskid){
         
         var response = this.response_message;
         
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
-            alert(`Server says ${response.status}. Please try again later.\nupdate_task_init() - ${currentUser}`) // TODO: reload to send the request again.
+        if(response.status != "200 OK"){
+            alert(`Server says ${response.status}. Please try again later.\nupdate_task_init() - ${currentUser}`)
             return;
         } 
         
@@ -157,9 +132,6 @@ function update_task_init(taskid){
         
         container.innerHTML = '';
         container.appendChild(SingelTaskTemplate);
-        template = SingelTaskTemplate;
-        
-        history.pushState({user : currentUser, taskId : taskid}, 'Update', `#update/${currentUser}/${taskid}`);
     }
 
     httpRequest.send();
@@ -173,12 +145,11 @@ function add_task_init(){
     
     container.innerHTML = '';
     container.appendChild(SingelTaskTemplate);
-    template = SingelTaskTemplate;
-
-    history.replaceState({user : currentUser}, 'NewTask', `#newtask/${currentUser}`);
 }
 
 
+
+// perform action through the network
 
 function login(e) {
     if(e != undefined) e.preventDefault();
@@ -192,11 +163,12 @@ function login(e) {
     httpRequest.onload = function () {
         var response = this.response_message;
 
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
+        if(response.status != "200 OK"){
             alert(`Server says: ${response.status}, please try again later.\nlogin() - ${username}`);
         } else{
             currentUser = username;
-            personal_area_init();
+            localStorage.setItem('currentUser', currentUser);
+            window.location.hash = `homepage/${currentUser}`;
         }
     };
 
@@ -214,6 +186,14 @@ function singup(e) {
         alert("'Password' and 'verify password' are not the same. Please check again.");
         return;
     }
+    if(password.length < 4 ){
+        alert('password must contain at least 4 characters');
+        return;
+    }
+    if(!password.match("[a-zA-Z]") || !password.match("[0-9]")){
+        alert('password must contain at least 1 letter and 1 number');
+        return;
+    }
 
     var httpRequest = new FXMLHttpRequest();
     httpRequest.open('POST', `/users`);
@@ -224,13 +204,32 @@ function singup(e) {
         if(response.status != "200 OK"){
             alert(`Server says: ${response.status}. try again later.\nsignup() - ${username}`);
         } else{
-            // currentUser = username;
-            // personal_area_init();
-            login_init();
-        }// 
+            window.location.hash = '#login';
+        }
     };
 
     httpRequest.send({"username" : username, "password": password});
+}
+
+function task_list_init(tasks, tbody){
+    // help function to generate the rows in the table
+    tbody.innerHTML = "";
+
+    tasks.forEach(task => {
+            var task_row = document.getElementById("table-data").content.cloneNode(true);
+
+            task_row.getElementById("description-area").innerText = task.description;
+
+            task_row.getElementById("delete-button")
+                    .addEventListener('click', () => delete_task(task.taskid) );
+            task_row.getElementById("open-button")
+                    .addEventListener('click',  () => {window.location.hash = `#update/${currentUser}/${task.taskid}`});
+
+            task_row.getElementById("status-button")
+                    .addEventListener('change', (e) => update_status(e, task.taskid));
+            task_row.getElementById("status-button").checked = task.is_done;
+            tbody.appendChild(task_row);            
+        });
 }
 
 function add_task(e){
@@ -242,9 +241,9 @@ function add_task(e){
     httpRequest.onload = function (){
 
         var response = this.response_message;
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
-            alert(`Server says ${response.status}. Please try again later.\nadd_task() - ${currentUser}`) // TODO: reload to send the request again.
-        } else personal_area_init();
+        if(response.status != "200 OK"){ 
+            alert(`Server says ${response.status}. Please try again later.\nadd_task() - ${currentUser}`)
+        } else window.location.hash = `homepage/${currentUser}`; // personal_area_init();
     }
 
     var source = document.getElementById("task-info-to-save");
@@ -254,7 +253,6 @@ function add_task(e){
     var is_done = source["status-button"].checked;
 
     httpRequest.send({'description': desc, 'note': note, 'is_done': is_done})
-                      
 }
 
 function update_task(e, taskid) {
@@ -266,10 +264,10 @@ function update_task(e, taskid) {
     httpRequest.onload = function () {
         var response = this.response_message;
         
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
-            alert(`Server says ${response.status}. Please try again later.\nupdate_task()`) // TODO: reload to send the request again.
-            update_task_init(taskid);
-        } else personal_area_init();
+        if(response.status != "200 OK"){
+            alert(`Server says ${response.status}. Please try again later.\nupdate_task()`)
+            //update_task_init(taskid);
+        } else window.location.hash = `homepage/${currentUser}`; //personal_area_init();
     }
 
     var desc = document.getElementById("description").value;
@@ -289,8 +287,8 @@ function update_status(e, taskid) {
     request.onload = function() {
         var response = this.response_message;
         
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
-            alert(`Server says ${response.status}. Please try again later.\nupdate_status()`) // TODO: reload to send the request again.
+        if(response.status != "200 OK"){
+            alert(`Server says ${response.status}. Please try again later.\nupdate_status()`)
             button.checked = !button.checked;
         } 
     };
@@ -305,8 +303,8 @@ function delete_task(taskid) {
     delete_request.onload = function () {
         var response = this.response_message;
         
-        if(response.status != "200 OK"){ // TODO: add switch for different server responses
-            alert(`Server says ${response.status}. Please try again later.`) // TODO: reload to send the request again.
+        if(response.status != "200 OK"){
+            alert(`Server says ${response.status}. Please try again later.`)
         } else personal_area_init();
     }
 

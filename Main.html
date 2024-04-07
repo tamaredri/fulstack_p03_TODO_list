@@ -6,7 +6,7 @@
     <title>TODO List</title>
     <link rel="stylesheet" href="Main.css"/>
 <body>
-    <div id="container"></div>
+    <div id="page-container"></div>
 
     <template class="template" id="login-template">
         <div class="container">
@@ -17,7 +17,7 @@
                 <p id="loginErrorMessage" class="error-message"></p>
                 <button class="submit" id="login-submit" type="submit">Login</button>
             </form>
-            <p>Don't have an account? <a href="#" id="register-link" class="link">Register</a></p> 
+            <p>Don't have an account? <a id="register-link" class="link">Register</a></p> 
         </div>
     </template>
 
@@ -30,7 +30,7 @@
                 <input type="password" id="confirm-password" placeholder="Confirm Password" required>
                 <button class="submit" id="signup-submit" type="submit">Sign Up</button>
             </form>
-            <p>Already have an account? <a href="#" id="login-link" class="link">Login</a></p>
+            <p>Already have an account? <a id="login-link" class="link">Login</a></p>
         </div>
    </template>
 
@@ -66,8 +66,8 @@
             </div>
 
             <div class="input-wrapper">
-                <label for="note">Note:</label>
-                <input type="text" id="note" placeholder="Note">
+                <label>Note:</label>
+                <textarea cols="42" id="note" placeholder="Note"></textarea>
             </div>  
                 
 
